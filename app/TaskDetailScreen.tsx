@@ -223,9 +223,6 @@ export default function TaskDetailScreen() {
                 <Text style={styles.detailText}>{description || 'No description'}</Text>
 
                 <View style={styles.bottomBar}>
-                  <TouchableOpacity style={styles.button} onPress={handleEdit}>
-                    <Text style={styles.buttonText}>Edit</Text>
-                  </TouchableOpacity>
                   <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDelete}>
                     <Text style={styles.buttonText}>Delete</Text>
                   </TouchableOpacity>
@@ -243,7 +240,7 @@ export default function TaskDetailScreen() {
                   markedDates={{
                     [selectedDate]: {
                       selected: true,
-                      selectedColor: '#f7b2d9',
+                      selectedColor: '#b97cfc',
                     },
                   }}
                   theme={{
@@ -359,8 +356,8 @@ export default function TaskDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
-    padding: 20,
+    backgroundColor: '#0f0f0f',
+    paddingHorizontal: 20,
   },
   backButton: {
     position: 'absolute',
@@ -382,14 +379,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#333',
   },
   activeTab: {
-    borderBottomColor: '#f7b2d9',
+    borderBottomColor: '#b97cfc',
   },
   tabText: {
     color: '#aaa',
     fontSize: 16,
   },
   activeTabText: {
-    color: '#f7b2d9',
+    color: '#b97cfc',
     fontWeight: 'bold',
   },
   detailsContainer: {
@@ -432,14 +429,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#f7b2d9',
+    backgroundColor: '#b97cfc',
     padding: 13,
     borderRadius: 10,
     alignItems: 'center',
-    minWidth: 80,
+    minWidth: 150,
   },
   deleteButton: {
-    backgroundColor: '#ff5555', // Red for delete button
+    backgroundColor: '#b97cfc', 
   },
   cancelButton: {
     backgroundColor: '#555',
@@ -457,11 +454,9 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    gap: 10,
     padding: 18,
-    borderTopWidth: 1,
-    borderColor: '#222',
-    backgroundColor: '#191919',
+    backgroundColor: '#0f0f0f',
   },
   priorityContainer: {
     flexDirection: 'row',
@@ -479,8 +474,8 @@ const styles = StyleSheet.create({
     borderColor: '#333',
   },
   priorityBoxSelected: {
-    backgroundColor: '#f7b2d9',
-    borderColor: '#f7b2d9',
+    backgroundColor: '#b97cfc',
+    borderColor: '#b97cfc',
   },
   priorityText: {
     color: '#fff',

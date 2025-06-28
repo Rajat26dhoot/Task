@@ -31,6 +31,33 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const [username, setUsername] = useState('');
 
+
+  const scheduleNotificationsForTasks = async () => {
+  try {
+    const tasksJSON = await AsyncStorage.getItem('tasks');
+    const tasks = tasksJSON ? JSON.parse(tasksJSON) : [];
+
+    for (const task of tasks) {
+      if (!task.completed) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: `📝 Task: ${task.title}`,
+            body: `Scheduled from ${task.startTime} to ${task.endTime}`,
+          },
+          trigger: {
+            seconds:2, // Trigger notification after 30 seconds
+          },
+        });
+      }
+    }
+
+    console.log('✅ Notifications scheduled for tasks!');
+  } catch (error) {
+    console.error('❌ Error scheduling notifications:', error);
+  }
+};
+
+
   const loadUsername = async () => {
   try {
     const name = await AsyncStorage.getItem('userName');
@@ -74,6 +101,7 @@ export default function HomeScreen() {
     useCallback(() => {
       loadTasksFromStorage();
       loadUsername();
+      scheduleNotificationsForTasks();
     }, [])
   );
 
@@ -118,6 +146,8 @@ export default function HomeScreen() {
   const handleNotificationBell = () => {
     sendNotification(); // You could use logic to notify only if there are due/overdue tasks
   };
+
+  
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 130 }}>

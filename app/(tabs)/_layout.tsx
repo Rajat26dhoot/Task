@@ -1,96 +1,152 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import {
+  Alert,
+  Animated,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { CurvedBottomBarExpo } from 'react-native-curved-bottom-bar';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Link } from "expo-router";
 
+// Import your screens
+import IndexScreen from '@/app/(tabs)/index';
+import TasksScreen from '@/app/(tabs)/tasks';
+import SettingScreen from '@/app/(tabs)/setting';
+import ProfileScreen from '@/app/(tabs)/profile';
 
 export default function TabLayout() {
-  return (
-    <Tabs
-      screenOptions={({ route }) => {
-  const isAddRoute = route.name === 'add';
-
-  return {
-    headerShown: false,
-    tabBarShowLabel: false,
-    tabBarStyle: isAddRoute
-      ? { display: 'none' } // 👈 Hide tab bar on 'add' screen
-      : {
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#1c1c1e',
-          borderTopLeftRadius: 40,
-          borderTopRightRadius: 40,
-          height: Platform.OS === 'ios' ? 80 : 100,
-          borderTopWidth: 0,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 10,
-        },
-    tabBarItemStyle: {
-      marginTop: 10,
-    },
-    tabBarIcon: ({ focused, color, size }) => {
-      let iconName: keyof typeof Ionicons.glyphMap = 'home';
-
-      if (route.name === 'index') iconName = focused ? 'home' : 'home-outline';
-      else if (route.name === 'tasks') iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-      else if (route.name === 'setting') iconName = focused ? 'list' : 'list-outline';
-      else if (route.name === 'profile') iconName = focused ? 'person' : 'person-outline';
-
-
-      if (route.name === 'add') {
-        return (
-          <View
-            style={{
-              position: 'absolute',
-              top: -40,
-              width: 70,
-              height: 70,
-              borderRadius: 35,
-              backgroundColor: '#0f0f0f',
-              justifyContent: 'center',
-              alignItems: 'center',
-              zIndex: 0,
-            }}
-          >
-            <View
-              style={{
-                width: 55,
-                height: 55,
-                borderRadius: 27.5,
-                backgroundColor: '#b97cfc',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Ionicons name="add" size={36} color="#000" />
-            </View>
-          </View>
-        );
-      }
-
-      return (
-        <Ionicons
-          name={iconName}
-          size={24}
-          color={focused ? '#b97cfc' : '#ccc'}
-        />
-      );
-    },
+  const _renderIcon = (routeName, selectedTab) => {
+    let icon = '';
+    switch (routeName) {
+      case 'home':
+        icon = 'home-outline';
+        break;
+      case 'tasks':
+        icon = 'checkmark-done-outline';
+        break;
+      case 'settings':
+        icon = 'search-outline';
+        break;
+      case 'profile':
+        icon = 'person-outline';
+        break;
+      default:
+        icon = 'ellipse-outline';
+    }
+    return (
+      <Ionicons
+        name={icon}
+        size={25}
+        color={routeName === selectedTab ? '#b97cfc' : 'white'}
+      />
+    );
   };
-}}
 
+  const renderTabBar = ({ routeName, selectedTab, navigate }) => (
+    <TouchableOpacity
+      onPress={() => navigate(routeName)}
+      style={styles.tabbarItem}
     >
-      <Tabs.Screen name="index" options={{ title: 'Home' }} />
-      <Tabs.Screen name="tasks" options={{ title: 'Tasks' }} />
-      <Tabs.Screen name="add" options={{ title: 'Add' }} />
-      <Tabs.Screen name="setting" options={{ title: 'Profile' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Messages' }} />
-    </Tabs>
+      {_renderIcon(routeName, selectedTab)}
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <CurvedBottomBarExpo.Navigator
+        type="DOWN"
+        style={styles.bottomBar}
+        shadowStyle={styles.shadow}
+        height={55}
+        circleWidth={50}
+        bgColor="black"
+        initialRouteName="home"
+        borderTopLeftRight
+        renderCircle={({ selectedTab, navigate }) => (
+          <Animated.View style={styles.btnCircleUp}>
+            <Link href="/add" asChild>
+  <TouchableOpacity style={styles.button}>
+      <Ionicons name="add" color="#b97cfc" size={50} />
+  </TouchableOpacity>
+</Link>
+          </Animated.View>
+        )}
+        tabBar={renderTabBar}
+      >
+        <CurvedBottomBarExpo.Screen
+          name="home"
+          position="LEFT"
+          component={IndexScreen}
+          options={{ headerShown: false }}
+        />
+        <CurvedBottomBarExpo.Screen
+          name="tasks"
+          position="LEFT"
+          component={TasksScreen}
+          options={{ headerShown: false }}
+        />
+        <CurvedBottomBarExpo.Screen
+          name="settings"
+          position="RIGHT"
+          component={SettingScreen}
+          options={{ headerShown: false }}
+        />
+        <CurvedBottomBarExpo.Screen
+          name="profile"
+          position="RIGHT"
+          component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
+      </CurvedBottomBarExpo.Navigator>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black', 
+  },
+  shadow: {
+    shadowColor: '#DDDDDD',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+  },
+  button: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  bottomBar: {
+  },
+  btnCircleUp: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'black',
+    borderWidth: 2,
+    borderColor: '#b97cfc',
+    bottom: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 1,
+  },
+  tabbarItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

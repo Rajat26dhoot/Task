@@ -1,32 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState ,useCallback} from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LineChart, Grid, XAxis, YAxis } from 'react-native-svg-charts';
-import * as shape from 'd3-shape';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 
-const Task: React.FC = () => {
+const TasksScreen = () => {
   const [completedTasks, setCompletedTasks] = useState(0);
   const [ongoingTasks, setOngoingTasks] = useState(0);
-  const [totalTasksData, setTotalTasksData] = useState<number[]>([]);
-  const [dateLabels, setDateLabels] = useState<string[]>([]);
 
   const totalTasks = completedTasks + ongoingTasks;
   const completionRate = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
-
-  // Helper function to generate an array of dates for the last N days
-  const getDateRange = (endDate: Date, days: number): { dates: Date[]; labels: string[] } => {
-    const dates: Date[] = [];
-    const labels: string[] = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(endDate);
-      d.setDate(endDate.getDate() - i);
-      dates.push(d);
-      labels.push(`${d.getMonth() + 1}/${d.getDate()}`); // Format as MM/DD
-    }
-    return { dates, labels };
-  };
 
   useFocusEffect(
     useCallback(() => {
@@ -35,32 +17,10 @@ const Task: React.FC = () => {
           const storedTasksJSON = await AsyncStorage.getItem('tasks');
           if (storedTasksJSON) {
             const storedTasks = JSON.parse(storedTasksJSON);
-
-            // Calculate completed and ongoing tasks
             const completed = storedTasks.filter((task: any) => task.completed === true).length;
             const ongoing = storedTasks.filter((task: any) => task.completed === false).length;
             setCompletedTasks(completed);
             setOngoingTasks(ongoing);
-
-            // Get the last 7 days (including today)
-            const today = new Date();
-            const { dates, labels } = getDateRange(today, 7);
-
-            // Count tasks for each date
-            const tasksByDate = Array(7).fill(0);
-            storedTasks.forEach((task: any) => {
-              const taskDate = new Date(task.date);
-              const taskDateStr = taskDate.toISOString().split('T')[0];
-              const index = dates.findIndex(
-                (d) => d.toISOString().split('T')[0] === taskDateStr
-              );
-              if (index !== -1) {
-                tasksByDate[index]++;
-              }
-            });
-
-            setTotalTasksData(tasksByDate);
-            setDateLabels(labels);
           }
         } catch (e) {
           console.log('Error loading task data:', e);
@@ -70,6 +30,7 @@ const Task: React.FC = () => {
       fetchData();
     }, [])
   );
+
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -87,41 +48,6 @@ const Task: React.FC = () => {
           </View>
         </View>
 
-        <Text style={styles.heading}>Total Tasks per Date</Text>
-
-        <View style={styles.chartContainer}>
-          <View style={{ height: 250, flexDirection: 'row' }}>
-            <YAxis
-              data={totalTasksData}
-              style={{ marginBottom: 30 }}
-              contentInset={{ top: 20, bottom: 20 }}
-              svg={{ fill: 'orange', fontSize: 12 }}
-              numberOfTicks={6}
-              formatLabel={(value: number) => `${value}`}
-            />
-
-            <View style={{ flex: 1, marginLeft: 10 }}>
-              <LineChart
-                style={{ flex: 1 }}
-                data={totalTasksData}
-                svg={{ stroke: 'orange', strokeWidth: 2 }}
-                contentInset={{ top: 20, bottom: 20 }}
-                curve={shape.curveNatural}
-              >
-                <Grid svg={{ stroke: 'orange', strokeOpacity: 0.3 }} />
-              </LineChart>
-            </View>
-          </View>
-
-          <XAxis
-            style={{ marginHorizontal: 10, height: 30 }}
-            data={totalTasksData}
-            formatLabel={(value, index) => dateLabels[index] || ''}
-            contentInset={{ left: 20, right: 20 }}
-            svg={{ fill: 'orange', fontSize: 12 }}
-          />
-        </View>
-
         <View style={styles.percentageCard}>
           <Text style={styles.percentageTitle}>Completion Rate</Text>
           <Text style={styles.percentageValue}>{completionRate}%</Text>
@@ -134,11 +60,12 @@ const Task: React.FC = () => {
   );
 };
 
-export default Task;
+export default TasksScreen; 
+
+
 
 const styles = StyleSheet.create({
   scrollContainer: {
-    paddingBottom: 40,
     flexGrow: 1,
   },
   container: {
@@ -209,4 +136,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
   },
-});
+});// Make sure this is the default export

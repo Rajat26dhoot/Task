@@ -28,7 +28,7 @@ type Props = {
 export default function Add({ navigation }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedDate, setSelectedDate] = useState('2021-07-10');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [showPicker, setShowPicker] = useState(false);
@@ -99,7 +99,7 @@ const handleCreateTask = async () => {
     setEndTime('');
     setPriority('');
     setCategory('');
-    setSelectedDate('2021-07-10');
+    setSelectedDate('');
   } catch (error) {
     console.error('Error saving task:', error);
     Alert.alert('Error', 'Failed to save task.');
@@ -115,9 +115,6 @@ const handleCreateTask = async () => {
         
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           <View style={styles.container}>
-            <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home')}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
 
             <Calendar
               style={{ paddingTop: 50 }}
@@ -126,7 +123,7 @@ const handleCreateTask = async () => {
               markedDates={{
                 [selectedDate]: {
                   selected: true,
-                  selectedColor: '#f7b2d9',
+                  selectedColor: '#b97cfc',
                 },
               }}
               theme={{
@@ -238,7 +235,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0f0f0f',
-    padding: 20,
+    paddingHorizontal: 20,
   },
   backButton: {
     position: 'absolute',
@@ -286,7 +283,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   button: {
-    backgroundColor: '#f7b2d9',
+    backgroundColor: '#b97cfc',
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
@@ -316,8 +313,8 @@ priorityBox: {
 },
 
 priorityBoxSelected: {
-  backgroundColor: '#f7b2d9',
-  borderColor: '#f7b2d9',
+  backgroundColor: '#b97cfc',
+  borderColor: '#b97cfc',
 },
 
 priorityText: {

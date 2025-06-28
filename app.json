@@ -34,7 +34,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
@@ -42,8 +43,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "34b20898-b509-40ae-9731-89b7ce27f1f2"
+        "projectId": "ccb5f5e1-1a97-4abd-b814-5f944d64f43a"
       }
-    }
+    },
+    "owner": "rajat26"
   }
 }

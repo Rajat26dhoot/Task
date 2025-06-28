@@ -7,6 +7,7 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Modal from 'react-native-modal';
@@ -25,12 +26,14 @@ export default function Setting() {
   const [selectedDate, setSelectedDate] = useState('');
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [isMonthModalVisible, setMonthModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
 
+  // Helper to generate days in month
   const generateMonthDays = (year, month) => {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     return Array.from({ length: daysInMonth }, (_, i) => {
       const d = new Date(year, month, i + 1);
-      const isoDate = d.toISOString().split('T')[0];
+      const isoDate = d.toISOString().split('T')[0]; // 'YYYY-MM-DD'
       return {
         date: i + 1,
         day: d.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -39,6 +42,7 @@ export default function Setting() {
     });
   };
 
+  // On month/year change, update days and selectedDate
   useEffect(() => {
     const updatedDays = generateMonthDays(currentYear, currentMonthIndex);
     setDays(updatedDays);
@@ -53,32 +57,48 @@ export default function Setting() {
     setSelectedDate(defaultSelectedDate);
   }, [currentMonthIndex, currentYear]);
 
+  // Fetch tasks for the selected date
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const stored = await AsyncStorage.getItem('tasks');
+        console.log('Stored tasks:', stored);
         const tasks = stored ? JSON.parse(stored) : [];
 
+        // Debug: log selectedDate and task dates
+        console.log('Selected date:', selectedDate);
+        tasks.forEach(t => console.log('Task date:', t.date));
+
+        // Filter by date and search text
         const matchingTasks = tasks
-          .filter((task) => task.date === selectedDate)
+          .filter((task) => !selectedDate || task.date === selectedDate)
+          .filter((task) =>
+            task.title.toLowerCase().includes(searchText.toLowerCase())
+          )
           .sort((a, b) => {
-            // Convert 12-hour time to 24-hour for sorting
-            const timeA = new Date(`1970-01-01 ${a.startTime}`).getTime();
-            const timeB = new Date(`1970-01-01 ${b.startTime}`).getTime();
-            return timeA - timeB;
+            // Safe time parsing
+            const parseTime = (t) => {
+              if (!t) return 0;
+              const [time, period] = t.split(' ');
+              let [h, m] = time.split(':').map(Number);
+              if (period && period.toLowerCase() === 'pm' && h < 12) h += 12;
+              if (period && period.toLowerCase() === 'am' && h === 12) h = 0;
+              return h * 60 + m;
+            };
+            return parseTime(a.startTime) - parseTime(b.startTime);
           });
 
         setFilteredTasks(matchingTasks);
       } catch (error) {
         console.error('Error loading tasks:', error);
+        Alert.alert('Error', 'Failed to load tasks.');
       }
     };
 
-    if (selectedDate) {
-      fetchTasks();
-    }
-  }, [selectedDate]);
+    fetchTasks();
+  }, [selectedDate, searchText]);
 
+  // Toggle task completion
   const toggleTaskCompletion = async (taskId) => {
     try {
       const stored = await AsyncStorage.getItem('tasks');
@@ -94,10 +114,13 @@ export default function Setting() {
       );
     } catch (error) {
       console.error('Error updating task:', error);
+      Alert.alert('Error', 'Failed to update task.');
     }
   };
 
+  // Format date for display
   const formatDate = (dateStr) => {
+    if (!dateStr) return '';
     const dateObj = new Date(dateStr);
     return `${months[dateObj.getMonth()]} ${dateObj.getDate()}, ${dateObj.getFullYear()}`;
   };
@@ -110,6 +133,8 @@ export default function Setting() {
         placeholder="Search task"
         placeholderTextColor="#aaa"
         style={styles.searchInput}
+        value={searchText}
+        onChangeText={setSearchText}
       />
 
       <TouchableOpacity onPress={() => setMonthModalVisible(true)} style={styles.monthPicker}>
@@ -162,34 +187,46 @@ export default function Setting() {
       ) : (
         filteredTasks.map((task) => (
           <View key={task.id} style={styles.taskCard}>
-            <View style={styles.timeBox}>
-              <Text style={styles.timeText}>
-                {task.startTime} - {task.endTime}
-              </Text>
-            </View>
-            <View style={styles.taskContent}>
-              <Text
-                style={[
-                  styles.taskName,
-                  task.completed && { textDecorationLine: 'line-through', color: '#aaa' },
-                ]}
-              >
-                {task.title}
-              </Text>
-              <Text style={styles.taskDetail}>📌 {task.category}</Text>
-              <Text style={styles.taskDetail}>⚡ {task.priority}</Text>
-              {task.description && (
-                <Text style={styles.taskDetail}>📝 {task.description}</Text>
-              )}
-            </View>
-            <TouchableOpacity onPress={() => toggleTaskCompletion(task.id)}>
-              <Ionicons
-                name={task.completed ? 'checkmark-circle' : 'checkmark-circle-outline'}
-                size={24}
-                color={task.completed ? '#A78BFA' : '#fff'}
-              />
-            </TouchableOpacity>
-          </View>
+  <View style={styles.leftColumn}>
+    <Ionicons name="time-outline" size={18} color="#A78BFA" />
+    <Text style={styles.timeText}>
+      {task.startTime} - {task.endTime}
+    </Text>
+  </View>
+
+  <View style={styles.taskContent}>
+    <Text
+      style={[
+        styles.taskName,
+        task.completed && { textDecorationLine: 'line-through', color: '#888' },
+      ]}
+    >
+      {task.title}
+    </Text>
+
+    <View style={styles.tagRow}>
+      <View style={styles.tag}>
+        <Text style={styles.tagText}>📌 {task.category}</Text>
+      </View>
+      <View style={[styles.tag, styles.priorityTag(task.priority)]}>
+        <Text style={styles.tagText}>⚡ {task.priority}</Text>
+      </View>
+    </View>
+
+    {task.description ? (
+      <Text style={styles.taskDetail}>📝 {task.description}</Text>
+    ) : null}
+  </View>
+
+  <TouchableOpacity onPress={() => toggleTaskCompletion(task.id)}>
+    <Ionicons
+      name={task.completed ? 'checkmark-circle' : 'checkmark-circle-outline'}
+      size={26}
+      color={task.completed ? '#A78BFA' : '#fff'}
+    />
+  </TouchableOpacity>
+</View>
+
         ))
       )}
 
@@ -312,12 +349,29 @@ const styles = StyleSheet.create({
   },
   taskCard: {
     flexDirection: 'row',
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 15,
-    alignItems: 'center',
+  backgroundColor: '#1E1E1E',
+  borderRadius: 16,
+  padding: 16,
+  marginBottom: 15,
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.2,
+  shadowRadius: 6,
+  elevation: 3,
+  borderWidth: 1,
+  borderColor: '#292929',
   },
+  leftColumn: {
+  alignItems: 'center',
+  marginRight: 12,
+},
+tagRow: {
+  flexDirection: 'row',
+  gap: 8,
+  marginTop: 4,
+  flexWrap: 'wrap',
+},
   timeBox: {
     width: 100, // Increased width to accommodate start and end time
     marginRight: 12,
@@ -404,4 +458,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  tag: {
+  backgroundColor: '#333',
+  borderRadius: 8,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+},
+tagText: {
+  color: '#ccc',
+  fontSize: 12,
+},
+  priorityTag: (priority) => ({
+  backgroundColor:
+    priority === 'High'
+      ? '#EF4444'
+      : priority === 'Medium'
+      ? '#FACC15'
+      : '#10B981',
+}),
 });
